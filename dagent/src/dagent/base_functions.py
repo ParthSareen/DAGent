@@ -9,7 +9,8 @@ def call_llm_tool(model, messages, tools, api_base=None, **kwargs):
         model=model,
         messages=messages,
         tools=tools,
-        api_base=api_base
+        api_base=api_base,
+        tool_choice='required'
     )
     return response.choices[0].message
     
@@ -41,5 +42,14 @@ def create_tool_desc(model, function_desc):
         model=model,
         response_format={"type":"json_object"},
         messages=messages
+    )
+    return response.choices[0].message.content
+
+
+def call_llm(model, messages, api_base=None, **kwargs):
+    response = completion(
+        model=model,
+        messages=messages,
+        api_base=api_base
     )
     return response.choices[0].message.content

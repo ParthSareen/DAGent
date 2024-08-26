@@ -1,10 +1,19 @@
 # DAGent - Directed Acyclic Graphs (DAGs) as AI Agents
 ![Dagent Logo](DagentLogo.png)
 
+*DAGent is a Python library to create AI Agents without overhead*
+
+
 ## How to Use
 
-### Install the lib 
-`pip install dagent`
+### Dagent Diagram
+![DAGent Diagram](dagent/examples/diagram.jpeg)
+
+The idea behind dagent is to structure AI agents in to a workflow. This is done through setting each function up as a node in a graph. 
+
+The agentic behavior is through the inferring of what function to run through the use of LLMs which is abstracted by a "Decision Node".
+
+
 
 ### DAGent basics 
 
@@ -16,8 +25,8 @@
 - Runs a python function
 - Can be attached to a `DecisionNode` to be treated as a tool and allow an LLM to choose what to run
 
-### Dagent Diagram
-![DAGent Diagram](dagent/examples/diagram.jpeg)
+### Install the lib 
+`pip install dagent`
 
 
 ### Example Usage
@@ -73,6 +82,9 @@ add_two_nums_node.user_params = {
 }
 ```
 
+#### Side Effects
+<!-- TODO -->
+
 
 ## Motivation
 
@@ -90,6 +102,10 @@ add_two_nums_node.user_params = {
 - [ ] Logging
 - [ ] Alerting on error
 - [x] Add a compile method to derive data models and tool descriptions
+- [ ] Docker
+- [ ] LLM error
+- [ ] Ollama
+- [ ] Groq
 
 ## Acks
 Shoutout to:

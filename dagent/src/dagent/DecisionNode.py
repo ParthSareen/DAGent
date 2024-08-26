@@ -19,8 +19,7 @@ class DecisionNode(DagNode):
         self.logger = logging.getLogger(__name__)
         self.compiled = False
     
-
-    def compile(self, model='gpt-4-0125-preview', force_load=False) -> None:
+    def compile(self, model='gpt-4-0125-preview', force_load=False, tool_json_dir='Tool_JSON') -> None:
         """
         TODO
             - Add schema validation
@@ -30,12 +29,16 @@ class DecisionNode(DagNode):
             - data models for passing info between nodes
         """
         self.compiled = True
+
         if isinstance(self.next_nodes, list):
             self.next_nodes = {node.func.__name__: node for node in self.next_nodes}
+
         for _, next_node in self.next_nodes.items():
-            func_name = next_node.func.__name__ + '.json'
+            func_name = os.path.join(tool_json_dir, next_node.func.__name__ + '.json')
             self.logger.info(f"Compiling tool description for function: {next_node.func.__name__}")
+
             if force_load or not os.path.exists(func_name):
+                os.makedirs(tool_json_dir, exist_ok=True)
                 tool_desc = create_tool_desc(model=model, function_desc=inspect.getsource(next_node.func))
                 tool_desc_json = json.loads(tool_desc)
                 with open(func_name, 'w') as f:
@@ -44,7 +47,7 @@ class DecisionNode(DagNode):
                 with open(func_name, 'r') as f:
                     tool_desc_json = json.load(f)
 
-            next_node.tool_description = tool_desc_json 
+            next_node.tool_description = tool_desc_json
             next_node.compile()
 
 
@@ -57,15 +60,18 @@ class DecisionNode(DagNode):
 
         kwargs.setdefault('model', 'gpt-4-0125-preview')
 
-        input_data = kwargs.get('prev_output') or kwargs.get('messages')
-        if not input_data:
+        if not kwargs.get('prev_output') and not kwargs.get('messages'):
             raise ValueError("No input data provided for LLM call")
 
         if 'prev_output' in kwargs:
             kwargs['messages'] = [{'role': 'user', 'content': kwargs.pop('prev_output')}]
 
+        # Messages will override prev_output
+        if 'messages' in kwargs:
+            kwargs['messages'] = [{'role': 'user', 'content': kwargs.pop('messages')}]
+
         try:
-            # TODO: Messages param is unclear here to be passed
+            # The 'messages' param is passed in through the kwargs
             response = call_llm_tool(tools=[node.tool_description for node in self.next_nodes.values()], **kwargs)
             tool_calls = getattr(response, 'tool_calls', None)
             if not tool_calls:
@@ -78,7 +84,7 @@ class DecisionNode(DagNode):
 
                 next_node = self.next_nodes.get(function_name)
                 if not next_node:
-                    raise KeyError(f"Function name '{function_name}' not found in next_nodes")
+                    raise KeyError(f"Function name '{function_name}' not found in next_nodes. Something went wrong")
 
                 # Merge user_params with function_args, giving precedence to user_params
                 merged_args = {**function_args, **self.user_params}
@@ -86,6 +92,7 @@ class DecisionNode(DagNode):
                 # TODO: Manage through derived data models 
                 filtered_args = {k: v for k, v in merged_args.items() if k in func_signature.parameters}
 
+                # TODO: Can add a return here but would become a recursive call
                 next_node.run(**filtered_args)
 
         except (AttributeError, json.JSONDecodeError) as e:
