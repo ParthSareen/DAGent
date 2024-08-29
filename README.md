@@ -6,14 +6,17 @@
 
 ## How to Use
 
+### Install the lib 
+`pip install dagent`
+
+
+
 ### Dagent Diagram
 ![DAGent Diagram](dagent/examples/diagram.jpeg)
 
 The idea behind dagent is to structure AI agents in to a workflow. This is done through setting each function up as a node in a graph. 
 
 The agentic behavior is through the inferring of what function to run through the use of LLMs which is abstracted by a "Decision Node".
-
-
 
 ### DAGent basics 
 
@@ -24,9 +27,6 @@ The agentic behavior is through the inferring of what function to run through th
 `FunctionNode`
 - Runs a python function
 - Can be attached to a `DecisionNode` to be treated as a tool and allow an LLM to choose what to run
-
-### Install the lib 
-`pip install dagent`
 
 
 ### Example Usage
@@ -106,6 +106,8 @@ add_two_nums_node.user_params = {
 - [ ] LLM error
 - [ ] Ollama
 - [ ] Groq
+- [ ] Param passing
+- [ ] simple memory
 
 ## Acks
 Shoutout to:
