@@ -67,8 +67,6 @@ class DecisionNode(DagNode):
             kwargs['messages'] = [{'role': 'user', 'content': kwargs.pop('prev_output')}]
 
         # Messages will override prev_output
-        if 'messages' in kwargs:
-            kwargs['messages'] = [{'role': 'user', 'content': kwargs.pop('messages')}]
 
         try:
             # The 'messages' param is passed in through the kwargs

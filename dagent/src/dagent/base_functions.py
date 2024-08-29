@@ -80,20 +80,3 @@ desc = {
         }
     }
 }
-# output = call_llm_tool('groq/llama3-8b-8192', [{'role': 'user', 'content': 'add the numbers 2 and 3'}], tools=[desc])
-
-# tool_calls = getattr(output, 'tool_calls', None)
-# if not tool_calls:
-#     raise ValueError("No tool calls received from LLM tool response")
-
-# function_name = tool_calls[0].function.name
-# print(function_name)
-
-output = call_llm_tool('ollama_chat/hermes3', [{'role': 'user', 'content': 'add the numbers 2 and 3'}], tools=[desc])
-
-tool_calls = getattr(output, 'tool_calls', None)
-if not tool_calls:
-    raise ValueError("No tool calls received from LLM tool response")
-
-function_name = tool_calls[0].function.name
-print(function_name)
