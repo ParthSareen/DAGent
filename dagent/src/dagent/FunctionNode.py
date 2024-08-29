@@ -7,18 +7,20 @@ class FunctionNode(DagNode):
         self.user_params = user_params or {}
         self.compiled = False
     
-    def compile(self) -> None:
+    def compile(self, force_load=False) -> None:
         self.compiled = True
         if isinstance(self.next_nodes, list):
             self.next_nodes = {node.func.__name__: node for node in self.next_nodes}
         for _, next_node in self.next_nodes.items():
-            next_node.compile()
+            next_node.compile(force_load=force_load)
 
     def run(self, **kwargs) -> any:
         if not self.compiled:
             raise ValueError("Node not compiled. Please run compile() method from the entry node first")
+        
+        merged_params = {**self.user_params, **kwargs}    
 
-        self.node_result = self.func(**kwargs)
+        self.node_result = self.func(**merged_params)
         # Pass the result to the next nodes if any
         # TODO: figure out param logic pattern
         if not self.next_nodes:

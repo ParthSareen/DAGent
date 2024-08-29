@@ -1,3 +1,4 @@
+import inspect
 from litellm import completion
 from openai import OpenAI
 # For more info: https://litellm.vercel.app/docs/completion/input
@@ -9,12 +10,13 @@ def call_llm_tool(model, messages, tools, api_base=None, **kwargs):
         model=model,
         messages=messages,
         tools=tools,
-        api_base=api_base
+        api_base=api_base,
+        tool_choice='required'
     )
     return response.choices[0].message
     
 
-def create_tool_desc(model, function_desc):
+def create_tool_desc(model, function_desc, api_base=None):
     example = {
             "type": "function",
             "function": {
@@ -37,9 +39,44 @@ def create_tool_desc(model, function_desc):
             }
     }
     messages = [{"role": "user", "content": "Create a json for the attached function: {} using the following pattern for the json: {}. Don't add anything extra".format(function_desc, example)}]
-    response = client.chat.completions.create(
+    response = completion(
         model=model,
         response_format={"type":"json_object"},
-        messages=messages
+        messages=messages,
+        api_base=api_base
     )
     return response.choices[0].message.content
+
+
+def call_llm(model, messages, api_base=None, **kwargs):
+    response = completion(
+        model=model,
+        messages=messages,
+        api_base=api_base
+    )
+    return response.choices[0].message.content
+
+desc = {
+    "type": "function",
+    "function": {
+        "name": "add_two_nums",
+        "description": "Adds two integer numbers",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "a": {
+                    "type": "integer",
+                    "description": "The first number to add"
+                },
+                "b": {
+                    "type": "integer",
+                    "description": "The second number to add"
+                }
+            },
+            "required": [
+                "a",
+                "b"
+            ]
+        }
+    }
+}

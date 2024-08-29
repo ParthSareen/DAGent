@@ -1,12 +1,12 @@
 [project]
 name = "dagent"
-version = "0.0.3"
+version = "0.0.4"
 description = "AI Agents as DAGs - Directed Acyclic Graphs"
 authors = [
     { name = "Parth Sareen", email = "parth@extensible.dev" }
 ]
 dependencies = [
-    "litellm>=1.39.5",
+    "litellm>=1.44.0",
 ]
 readme = "../README.md"
 requires-python = ">= 3.8"

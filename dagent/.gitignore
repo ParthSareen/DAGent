@@ -5,6 +5,6 @@ build/
 dist/
 wheels/
 *.egg-info
-
+TOOL_JSON
 # venv
 .venv
