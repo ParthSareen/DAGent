@@ -62,7 +62,7 @@ jsonschema==4.23.0
     # via litellm
 jsonschema-specifications==2023.12.1
     # via jsonschema
-litellm==1.44.7
+litellm==1.44.19
     # via dagent
 markupsafe==2.1.5
     # via jinja2

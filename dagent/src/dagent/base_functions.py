@@ -1,9 +1,7 @@
 import inspect
 from litellm import completion
-from openai import OpenAI
 # For more info: https://litellm.vercel.app/docs/completion/input
 
-client = OpenAI()
 
 def call_llm_tool(model, messages, tools, api_base=None, **kwargs):
     response = completion(
@@ -11,7 +9,6 @@ def call_llm_tool(model, messages, tools, api_base=None, **kwargs):
         messages=messages,
         tools=tools,
         api_base=api_base,
-        tool_choice='required'
     )
     return response.choices[0].message
     
@@ -41,7 +38,7 @@ def create_tool_desc(model, function_desc, api_base=None):
     messages = [{"role": "user", "content": "Create a json for the attached function: {} using the following pattern for the json: {}. Don't add anything extra".format(function_desc, example)}]
     response = completion(
         model=model,
-        response_format={"type":"json_object"},
+        response_format={"type":"json_object"},        
         messages=messages,
         api_base=api_base
     )
@@ -56,27 +53,3 @@ def call_llm(model, messages, api_base=None, **kwargs):
     )
     return response.choices[0].message.content
 
-desc = {
-    "type": "function",
-    "function": {
-        "name": "add_two_nums",
-        "description": "Adds two integer numbers",
-        "parameters": {
-            "type": "object",
-            "properties": {
-                "a": {
-                    "type": "integer",
-                    "description": "The first number to add"
-                },
-                "b": {
-                    "type": "integer",
-                    "description": "The second number to add"
-                }
-            },
-            "required": [
-                "a",
-                "b"
-            ]
-        }
-    }
-}

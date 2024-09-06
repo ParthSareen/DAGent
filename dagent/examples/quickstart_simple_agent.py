@@ -26,7 +26,7 @@ print_result_node = FunctionNode(func=print_result)
 entry_node = FunctionNode(func=entry_func)
 
 # Setup decision node
-decision_node = DecisionNode()
+decision_node = DecisionNode(model='gpt-4-0125-preview', api_base=None)
 
 # Link nodes together
 entry_node.next_nodes = [decision_node] 
@@ -45,7 +45,7 @@ multiply_two_nums_node.next_nodes = [
 ]
 
 # Compile the nodes
-entry_node.compile()
+entry_node.compile(force_load=False)
 
 # Run the nodes
 entry_node.run(input="add the numbers 2 and 10")

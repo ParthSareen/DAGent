@@ -6,6 +6,7 @@ class FunctionNode(DagNode):
         self.tool_description = tool_description
         self.user_params = user_params or {}
         self.compiled = False
+        self.node_result = None
     
     def compile(self, force_load=False) -> None:
         self.compiled = True
