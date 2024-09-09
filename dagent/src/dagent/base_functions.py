@@ -49,7 +49,8 @@ def call_llm(model, messages, api_base=None, **kwargs):
     response = completion(
         model=model,
         messages=messages,
-        api_base=api_base
+        api_base=api_base,
+        **kwargs
     )
     return response.choices[0].message.content
 
