@@ -31,8 +31,8 @@ class FunctionNode(DagNode):
             params = {'prev_output': self.node_result, **next_node.user_params}
             next_node.run(**params)
 
-def FuncNode(nexts: dict[str, 'DagNode'] | list['DagNode'] | None = None):
+def FuncNode(next_nodes: dict[str, 'DagNode'] | list['DagNode'] | None = None):
     def decorator(func):
-        node = FunctionNode(func, next_nodes=nexts)
+        node = FunctionNode(func, next_nodes=next_nodes)
         return node
     return decorator
