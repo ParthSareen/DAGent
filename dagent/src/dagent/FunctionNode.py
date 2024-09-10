@@ -1,8 +1,8 @@
 from .DagNode import DagNode
 
 class FunctionNode(DagNode):
-    def __init__(self, func: callable, tool_description = dict | None, next_nodes: dict[str, DagNode] = None, user_params: dict | None = None):
-        super().__init__(func, next_nodes)
+    def __init__(self, func: callable, debug: bool = False, tool_description = dict | None, next_nodes: dict[str, DagNode] = None, user_params: dict | None = None):
+        super().__init__(func, debug, next_nodes)
         self.tool_description = tool_description
         self.user_params = user_params or {}
         self.compiled = False
@@ -19,11 +19,13 @@ class FunctionNode(DagNode):
         if not self.compiled:
             raise ValueError("Node not compiled. Please run compile() method from the entry node first")
         
-        merged_params = {**self.user_params, **kwargs}    
+        merged_params = {**self.user_params, **kwargs}
+        if self.debug: print('params:', merged_params)
 
         self.node_result = self.func(**merged_params)
         # Pass the result to the next nodes if any
         # TODO: figure out param logic pattern
+        if self.debug: print('result:', self.node_result)
         if not self.next_nodes:
             return self.node_result
         for _, next_node in self.next_nodes.items():

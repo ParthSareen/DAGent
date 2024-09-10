@@ -11,14 +11,15 @@ class DecisionNode(DagNode):
     def __init__(
         self, 
         func: callable = call_llm_tool, 
+        debug: bool = False,
         next_nodes: dict[str, DagNode] = None,
         user_params: dict | None = None,
-        model: str = 'gpt-4-0125-preview',
+        model: str = 'gpt-4o-mini-2024-07-18',
         api_base: str | None = None,
         tool_json_dir: str = 'Tool_JSON',
         retry_json_count: int = 3
     ):
-        super().__init__(func, next_nodes)
+        super().__init__(func, debug, next_nodes)
         self.user_params = user_params or {}
         self.logger = logging.getLogger(__name__)
         self.compiled = False
@@ -84,10 +85,13 @@ class DecisionNode(DagNode):
         
         # Update kwargs with the final messages list
         kwargs['messages'] = messages
+        if self.debug: print('params:', kwargs)
 
         try:
             # The 'messages' param is passed in through the kwargs
+            if self.debug: print('tools:', [node.tool_description for node in self.next_nodes.values()])
             response = call_llm_tool(model=self.model, tools=[node.tool_description for node in self.next_nodes.values()], api_base=self.api_base, **kwargs)
+            if self.debug: print('response:', response)
             tool_calls = getattr(response, 'tool_calls', None)
             if not tool_calls:
                 raise ValueError("No tool calls received from LLM tool response")
