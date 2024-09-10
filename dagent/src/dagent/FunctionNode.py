@@ -30,3 +30,9 @@ class FunctionNode(DagNode):
             # TODO: creating data models for passing info between nodes 
             params = {'prev_output': self.node_result, **next_node.user_params}
             next_node.run(**params)
+
+def FuncNode(nexts: dict[str, 'DagNode'] | list['DagNode'] | None = None):
+    def decorator(func):
+        node = FunctionNode(func, next_nodes=nexts)
+        return node
+    return decorator
