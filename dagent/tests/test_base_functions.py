@@ -35,7 +35,7 @@ def main():
     if args.model == 'groq':
         run_llm('groq/llama3-70b-8192')
     elif args.model == 'ollama':
-        run_llm('ollama_chat/mistral', api_base="http://localhost:11434")
+        run_llm('ollama_chat/llama3.1', api_base="http://localhost:11434")
     elif args.model == 'gpt4':
         run_llm('gpt-4-0125-preview')
 
