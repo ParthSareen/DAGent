@@ -1,3 +1,7 @@
+
+from dagent import DecisionNode, FunctionNode
+import logging
+
 """
 This example demonstrates the main concepts of the dagent library:
 1. Function Nodes: Represent individual operations in the workflow.
@@ -7,8 +11,12 @@ This example demonstrates the main concepts of the dagent library:
 5. Execution: Run the workflow starting from an entry point.
 """
 
-from dagent import DecisionNode, FunctionNode
+# Configure root logger to save logs to file
 
+# Can enable logging below to save logs to file
+# logging.basicConfig(level=logging.INFO, 
+                    # format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+                    # handlers=[logging.FileHandler('dagent_logs.log'), logging.StreamHandler()])
 
 def add_two_nums(a: int, b: int) -> int:
     """A simple function to add two numbers."""
@@ -70,14 +78,12 @@ def main():
     """
     Compilation prepares the DAG for execution, ensuring all nodes are properly linked.
     """
-    entry_node.compile(force_load=False)
+    entry_node.compile(force_load=True)
 
     # Execute the DAG
-    """
-    The workflow is executed by calling `run()` on the entry node.
-    The input is passed as an argument to the entry function.
-    """
-    entry_node.run(input="add the numbers 2 and 10")
+    while True:
+        user_input = input("Enter your command: ")
+        entry_node.run(input=user_input)
 
 if __name__ == "__main__":
     main()
