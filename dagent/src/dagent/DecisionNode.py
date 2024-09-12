@@ -26,55 +26,71 @@ class DecisionNode(DagNode):
         self.model = model
         self.tool_json_dir = tool_json_dir
         self.retry_json_count = retry_json_count
+        self.logger.info(f"DecisionNode initialized with model: {model}, api_base: {api_base}")
     
     def compile(self, force_load=False) -> None:
+        self.logger.info("Starting compilation process")
         self.compiled = True
 
         if isinstance(self.next_nodes, list):
             self.next_nodes = {node.func.__name__: node for node in self.next_nodes}
+            self.logger.debug(f"Converted next_nodes list to dictionary: {self.next_nodes.keys()}")
 
         for _, next_node in self.next_nodes.items():
             func_name = os.path.join(self.tool_json_dir, next_node.func.__name__ + '.json')
             self.logger.info(f"Compiling tool description for function: {next_node.func.__name__}")
 
             if force_load or not os.path.exists(func_name):
+                self.logger.debug(f"Creating new tool description for {next_node.func.__name__}")
                 os.makedirs(self.tool_json_dir, exist_ok=True)
                 try:
                     current_retry_count = 0
                     tool_desc = create_tool_desc(model=self.model, function_desc=inspect.getsource(next_node.func), api_base=self.api_base)
                     
                     while not tool_desc and current_retry_count < self.retry_json_count:
+                        self.logger.warning(f"Retry {current_retry_count + 1} for creating tool description of {next_node.func.__name__}")
                         tool_desc = create_tool_desc(model=self.model, function_desc=inspect.getsource(next_node.func), api_base=self.api_base)
                         current_retry_count += 1
 
                     if not tool_desc:
-                        raise ValueError(f"Tool description for {next_node.func.__name__} could not be generated, recommend generating manually and storing under {func_name}.json in {self.tool_json_dir} directory")
+                        error_msg = f"Tool description for {next_node.func.__name__} could not be generated, recommend generating manually and storing under {func_name}.json in {self.tool_json_dir} directory"
+                        self.logger.error(error_msg)
+                        raise ValueError(error_msg)
 
                     tool_desc_json = json.loads(tool_desc)
+                    self.logger.debug(f"Successfully created tool description for {next_node.func.__name__}")
                 except Exception as e:
                     self.logger.error(f"Error creating tool description for {next_node.func.__name__}: {e}")
                     raise e
                 with open(func_name, 'w') as f:
                     json.dump(tool_desc_json, f)
+                    self.logger.info(f"Saved tool description for {next_node.func.__name__} to {func_name}")
             else:
+                self.logger.info(f"Loading existing tool description for {next_node.func.__name__} from {func_name}")
                 with open(func_name, 'r') as f:
                     tool_desc_json = json.load(f)
 
             next_node.tool_description = tool_desc_json
             next_node.compile()
+        self.logger.info("Compilation process completed successfully for DecisionNode")
 
 
     def run(self, **kwargs) -> any:
+        self.logger.info("Starting DecisionNode run")
         if not self.next_nodes:
-            raise ValueError("Next nodes not specified for LLM call")
+            error_msg = "Next nodes not specified for LLM call"
+            self.logger.error(error_msg)
+            raise ValueError(error_msg)
 
         if not self.compiled:
-            raise ValueError("Node not compiled. Please run compile() method from the entry node first")
-
+            error_msg = "Node not compiled. Please run compile() method from the entry node first"
+            self.logger.error(error_msg)
+            raise ValueError(error_msg)
 
         if not kwargs.get('prev_output') and not kwargs.get('messages'):
-            raise ValueError("No input data provided for LLM call")
-
+            error_msg = "No input data provided for LLM call"
+            self.logger.error(error_msg)
+            raise ValueError(error_msg)
 
         # Get existing messages or create an empty list
         messages = kwargs.get('messages', [])
@@ -84,33 +100,47 @@ class DecisionNode(DagNode):
         
         # Update kwargs with the final messages list
         kwargs['messages'] = messages
+        self.logger.debug(f"Prepared messages for LLM call: {messages}")
 
         try:
+            self.logger.info(f"Calling LLM tool with model: {self.model}")
             # The 'messages' param is passed in through the kwargs
             response = call_llm_tool(model=self.model, tools=[node.tool_description for node in self.next_nodes.values()], api_base=self.api_base, **kwargs)
             tool_calls = getattr(response, 'tool_calls', None)
             if not tool_calls:
-                raise ValueError("No tool calls received from LLM tool response")
+                error_msg = "No tool calls received from LLM tool response"
+                self.logger.error(error_msg)
+                raise ValueError(error_msg)
 
-            # TODO: Should there be a pattern for restricting calls - error if multiple?
+            self.logger.info(f"Received {len(tool_calls)} tool call(s) from LLM")
             for tool_call in tool_calls:
                 function_name = tool_call.function.name
                 function_args = json.loads(tool_call.function.arguments)
+                self.logger.debug(f"Processing tool call for function: {function_name} with arguments: {function_args}")
 
                 next_node = self.next_nodes.get(function_name)
                 if not next_node:
-                    raise KeyError(f"Function name '{function_name}' not found in next_nodes. Something went wrong")
+                    error_msg = f"Function name '{function_name}' not found in next_nodes. Something went wrong"
+                    self.logger.error(error_msg)
+                    raise KeyError(error_msg)
 
                 # Merge user_params with function_args, giving precedence to user_params
                 merged_args = {**function_args, **self.user_params}
                 func_signature = inspect.signature(next_node.func)
                 # TODO: Manage through derived data models 
                 filtered_args = {k: v for k, v in merged_args.items() if k in func_signature.parameters}
+                self.logger.debug(f"Filtered arguments for {function_name}: {filtered_args}")
 
                 # TODO: Can add a return here but would become a stacked call 
+                self.logger.info(f"Executing next node: {function_name}")
                 next_node.run(**filtered_args)
 
         except (AttributeError, json.JSONDecodeError) as e:
-            raise ValueError(f"Error parsing tool call: {e}")
+            error_msg = f"Error parsing tool call: {e}"
+            self.logger.error(error_msg)
+            raise ValueError(error_msg)
         except Exception as e:
-            raise RuntimeError(f"LLM tool call failed: {e}")
+            error_msg = f"LLM tool call failed: {e}"
+            self.logger.error(error_msg)
+            raise RuntimeError(error_msg)
+        self.logger.info("DecisionNode run completed successfully")
