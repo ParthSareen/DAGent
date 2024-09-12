@@ -11,7 +11,6 @@ This example demonstrates the main concepts of the dagent library:
 5. Execution: Run the workflow starting from an entry point.
 """
 
-# Configure root logger to save logs to file
 
 # Can enable logging below to save logs to file
 # logging.basicConfig(level=logging.INFO, 
