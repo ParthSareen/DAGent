@@ -39,7 +39,7 @@ class FunctionNode(DagNode):
         # Pass the result to the next nodes if any
         # TODO: figure out param logic pattern
         if not self.next_nodes:
-            self.logger.info("No next nodes, returning result")
+            self.logger.info(f"No next nodes after {self.func.__name__}, returning result")
             return self.node_result
         for node_name, next_node in self.next_nodes.items():
             self.logger.info(f"Passing result to next node: {node_name}")

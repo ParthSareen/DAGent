@@ -35,7 +35,7 @@ def create_tool_desc(model, function_desc, api_base=None):
                 },
             }
     }
-    messages = [{"role": "user", "content": "Create a json for the attached function: {} using the following pattern for the json: {}. Don't add anything extra".format(function_desc, example)}]
+    messages = [{"role": "user", "content": "Create a json for the attached function: {} using the following pattern for the json: {}. Don't add anything extra. Make sure everything follows a valid json format".format(function_desc, example)}]
     response = completion(
         model=model,
         response_format={"type":"json_object"},        

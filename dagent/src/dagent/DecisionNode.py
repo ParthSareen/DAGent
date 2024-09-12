@@ -16,7 +16,9 @@ class DecisionNode(DagNode):
         model: str = 'gpt-4-0125-preview',
         api_base: str | None = None,
         tool_json_dir: str = 'Tool_JSON',
-        retry_json_count: int = 3
+        retry_json_count: int = 3,
+        max_tool_calls: int | None = None
+
     ):
         super().__init__(func, next_nodes)
         self.user_params = user_params or {}
@@ -26,8 +28,10 @@ class DecisionNode(DagNode):
         self.model = model
         self.tool_json_dir = tool_json_dir
         self.retry_json_count = retry_json_count
-        self.logger.info(f"DecisionNode initialized with model: {model}, api_base: {api_base}")
+        self.max_tool_calls = max_tool_calls
+        self.logger.info(f"DecisionNode initialized with model: {model}, api_base: {api_base}, max_tool_calls: {max_tool_calls}")
     
+
     def compile(self, force_load=False) -> None:
         self.logger.info("Starting compilation process")
         self.compiled = True
@@ -93,14 +97,14 @@ class DecisionNode(DagNode):
             raise ValueError(error_msg)
 
         # Get existing messages or create an empty list
-        messages = kwargs.get('messages', [])
+        messages = self.user_params.get('messages', kwargs.get('messages', []))
         # Add previous output as a user message if available
         if 'prev_output' in kwargs:
-            messages.append({'role': 'user', 'content': kwargs.pop('prev_output')})
+            messages.append({'role': 'user', 'content': str(kwargs['prev_output'])})
         
         # Update kwargs with the final messages list
         kwargs['messages'] = messages
-        self.logger.debug(f"Prepared messages for LLM call: {messages}")
+        self.logger.info(f"Prepared messages for LLM call: {messages}")
 
         try:
             self.logger.info(f"Calling LLM tool with model: {self.model}")
@@ -113,6 +117,19 @@ class DecisionNode(DagNode):
                 raise ValueError(error_msg)
 
             self.logger.info(f"Received {len(tool_calls)} tool call(s) from LLM")
+            self.logger.info(f"Tool calls: {tool_calls}")
+            if self.logger.getEffectiveLevel() == logging.DEBUG:
+                proceed = input("Debug mode is active. Do you want to proceed with the tool calls? (yes(y)/no(n)): ")
+                print('proceed: ',proceed)
+                if proceed.lower() not in ['yes', 'y']:
+                    self.logger.debug("\nUser chose not to proceed with the tool calls.")
+                    return
+
+            # Apply max_tool_calls constraint if set
+            if self.max_tool_calls is not None:
+                tool_calls = tool_calls[:self.max_tool_calls]
+                self.logger.info(f"Constrained to {len(tool_calls)} tool call(s) due to max_tool_calls setting")
+
             for tool_call in tool_calls:
                 function_name = tool_call.function.name
                 function_args = json.loads(tool_call.function.arguments)
@@ -126,12 +143,19 @@ class DecisionNode(DagNode):
 
                 # Merge user_params with function_args, giving precedence to user_params
                 merged_args = {**function_args, **self.user_params}
+                # Print kwargs for debugging
+                self.logger.info(f"Current kwargs: {kwargs}")
+                print(f"Current kwargs: {kwargs}")
+
+                if 'prev_output' in kwargs:
+                    merged_args['prev_output'] = kwargs['prev_output']
+
                 func_signature = inspect.signature(next_node.func)
+
                 # TODO: Manage through derived data models 
                 filtered_args = {k: v for k, v in merged_args.items() if k in func_signature.parameters}
-                self.logger.debug(f"Filtered arguments for {function_name}: {filtered_args}")
+                self.logger.info(f"Filtered arguments for {function_name}: {filtered_args}")
 
-                # TODO: Can add a return here but would become a stacked call 
                 self.logger.info(f"Executing next node: {function_name}")
                 next_node.run(**filtered_args)
 
