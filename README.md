@@ -76,7 +76,7 @@ For example, to use the `groq/llama3-70b-8192` model:
 decision_node1 = DecisionNode('groq/llama3-70b-8192')
 
 # Using ollama with decision node
-decision_node2 = DecisionNode('ollama_chat/mistral', api_base="http://localhost:11434")
+decision_node2 = DecisionNode('ollama_chat/llama3.1', api_base="http://localhost:11434")
 
 # Call llm function
 output = decision_node2.run(messages=[{'role': 'user', 'content': 'add the numbers 2 and 3'}])
