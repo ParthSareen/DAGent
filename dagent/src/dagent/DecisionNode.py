@@ -11,7 +11,7 @@ class DecisionNode(DagNode):
     def __init__(
         self, 
         func: callable = call_llm_tool, 
-        next_nodes: dict[str, DagNode] = None,
+        next_nodes: list | None = None,
         user_params: dict | None = None,
         model: str = 'gpt-4-0125-preview',
         api_base: str | None = None,
