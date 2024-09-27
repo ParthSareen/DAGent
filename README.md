@@ -5,7 +5,7 @@
 </p>
 
 *DAGent is an opinionated Python library to create AI Agents quickly without overhead*
-
+[![Downloads](https://static.pepy.tech/badge/dagent)](https://pepy.tech/project/dagent)
 
 ## Quickstart
 
