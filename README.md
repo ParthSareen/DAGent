@@ -41,7 +41,7 @@ The agentic behavior is through the inferring of what function to run through th
 
 `prev_output` param for functions:
 - If passing data from one function to another, make sure this param is in the function signature.
-- If extra params get passed in/weird stuff happens add a `**kwargs` to see if 
+- If extra params get passed in/weird stuff happens add a `**kwargs` to see if there are any hidden params which were passed and need to be handled
 
 
 ### DAGent Diagram
